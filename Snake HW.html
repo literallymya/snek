@@ -1,0 +1,452 @@
+<html>
+
+<head>
+  <title> Snake Program </title>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="400" height="400"> </canvas>
+  <br />
+  <p>Press any of the left/right/up/down arrows to move the green box to the goal (red square). Press space_bar to pause the game. </p>
+  <p id="Score">
+    <font size="8"> Score: 0</font><br />
+    <p id="Status">
+      <font size="8">Game Not Started</font><br />
+</body>
+<script>
+  positionX = positionY = 10; // This is the initial position of the green box (starting position)
+
+  var trail = [{ //this trail array is the snake basically
+      x: positionX,
+      y: positionY
+    },
+    {
+      x: 20,
+      y: positionY
+    },
+    {
+      x: 30,
+      y: positionY
+    },
+    {
+      x: 40,
+      y: positionY
+    },
+    {
+      x: 50,
+      y: positionY
+    },
+  ];
+
+  //The trail list is used to track the trailing green boxes and their positions
+
+  var tail = 5; // Initial length of the snake
+  var x = 0;
+
+  //creates the random variables for the coordinates of the red square
+
+  var redX = Math.round(Math.random() * 400);
+  var redY = Math.round(Math.random() * 400);
+
+  //makes sure coordinates are multiples of ten
+
+  redX = Math.round(redX / 10) * 10;
+  redY = Math.round(redY / 10) * 10;
+
+  // Some variables to keep track of the status of the game
+
+  var paused = false;
+  var gameOver = false;
+  var gameStarted = false;
+  var eatenSquare = false;
+  var currentDirection = "none";
+
+  /**
+   *
+   * Initialization of the Snake program.
+   * When the webpage is loaded, it calls this function because of the "onload function".
+   * This function basically gets the canvas.  It associates the "keyDown" event to "keyPushed" function."
+   * Note:  This uses a "canvas" to show the snake and target.  https://www.w3schools.com/html/html5_canvas.asp
+   *        You need only the "fillRect" method.  https://www.w3schools.com/tags/canvas_fillrect.asp
+   */
+
+  window.onload = function() {
+    canv = document.getElementById("myCanvas");
+    ctx = canv.getContext("2d");
+    ctx.fillStyle = "black"; // Set the fill style to black
+    ctx.fillRect(0, 0, canv.width, canv.height); // Set the entire canvas to black.
+
+    document.addEventListener("keydown", keyPushed); //This calls the keyPushed function everytime a key is pressed
+    statusElement = document.getElementById("Status");
+    scoreElement = document.getElementById("Score");
+    statusElement.style.fontSize = 40;
+    scoreElement.style.fontSize = 40;
+
+    score = 0;
+
+    setInterval(playSnakeGame, 100); // This keeps running the playSnakeGame function every 200 msec.
+  }
+
+  /**
+   * This is the main game.  Once you move any arrown (say up arrow), the snake will keep going up,
+   * until you change the direction or the game ends.  Your program should take care of the following conditions.
+   */
+
+  function playSnakeGame() {
+
+    // 1. Check if the game is over or paused.  If the game is over, don't do anything.  The keys are disabled.
+    // 2. If the game is paused, wait until the game is on again.  Press the space bar to resume the game.
+    // 3. Check for user input on one of the 4 arrows to move the snake, or the space bar to pause or resume the game.
+    // 4. Check if the snake crosses the border.  If so, end the game.
+    // 5. Check if the snake crosses itself.  If so, end the game.
+    // 6. Check if the snake crosses the goal/target.  If so, increment the score and update it on the web page.  Update snake length.
+
+    if (gameOver == true) {
+
+      document.getElementById("Status").innerHTML = "Game Over";
+
+    } else if (paused == true) {
+
+      document.getElementById("Status").innerHTML = "Game Paused";
+
+    } else {
+
+      if (currentDirection != "none") {
+        document.getElementById("Status").innerHTML = "Game Started";
+
+      }
+
+      clear(); //clears canvas
+      redSquare(); // draws red square
+      crossSquare(); // checks if snake eats square
+      greenSnake(); //draws snake
+      checkBounds(); //checks if snake crosses border
+
+      if (eatenSquare == true) {
+
+        // if square is eaten, then raises score and
+        // makes new square
+
+        score = score + 1;
+
+        document.getElementById("Score").innerHTML = "Score: " + score;
+
+        redX = Math.round(Math.random() * 400);
+        redY = Math.round(Math.random() * 400);
+
+        redX = Math.round(redX / 10) * 10;
+        redY = Math.round(redY / 10) * 10;
+
+        eatenSquare = false;
+
+      }
+
+    }
+
+  }
+
+  // makes global variables of the timers
+
+  var leftInterval = setInterval(moveLeft, 100);
+  var upInterval = setInterval(moveUp, 100);
+  var rightInterval = setInterval(moveRight, 100);
+  var downInterval = setInterval(moveDown, 100);
+
+  function keyPushed(evt) {
+
+    //when key is pressed
+
+    switch (evt.keyCode) {
+
+      //if space bar is pressed, game pauses
+      //and unpauses if already paused
+
+      case 32:
+
+        if (paused == false) {
+
+          paused = true;
+
+        } else if (paused == true) {
+
+          paused = false;
+
+        }
+        break;
+
+      case 37: // Left arrow
+
+        if (currentDirection != "right") {
+          clearInterval(leftInterval);
+
+          leftInterval = setInterval(moveLeft, 100);
+
+          currentDirection = "left"
+        }
+
+        break;
+
+      case 38: // Up Arrow
+
+        if (currentDirection != "down") {
+
+          clearInterval(upInterval);
+
+          upInterval = setInterval(moveUp, 100);
+
+          currentDirection = "up";
+
+        }
+
+        break;
+
+      case 39: // Right arrow
+
+        if (currentDirection != "left") {
+
+          clearInterval(rightInterval);
+
+          rightInterval = setInterval(moveRight, 100);
+
+          currentDirection = "right";
+
+        }
+
+        break;
+
+      case 40: // Down Arrow
+
+        if (currentDirection != "up") {
+
+          clearInterval(downInterval);
+
+          downInterval = setInterval(moveDown, 100);
+
+          currentDirection = "down";
+
+        }
+
+        break;
+    }
+  }
+
+  //functions for moving in each direction
+
+
+  function moveUp() {
+
+    if (currentDirection == "up" && paused == false) {
+
+      var endBoxX = trail[trail.length - 1].x;
+
+      var endBoxY = trail[trail.length - 1].y - 10;
+
+      var endBox = {
+        x: endBoxX,
+        y: endBoxY
+
+      }
+
+      //adds snake box to the end of the right
+
+      trail.push(endBox);
+
+      //gets rid of first snake box
+
+
+      if (score == x) {
+
+        trail.shift();
+
+      } else {
+        console.log("hello");
+        x++;
+      }
+
+    }
+
+  }
+
+
+  function moveRight() {
+
+    if (currentDirection == "right" && paused == false) {
+
+      var endBoxX = trail[trail.length - 1].x + 10;
+
+      var endBoxY = trail[trail.length - 1].y;
+
+      var endBox = {
+        x: endBoxX,
+        y: endBoxY
+      };
+
+      //adds snake box to the end of the right
+
+      trail.push(endBox);
+
+      //gets rid of first snake box
+
+      // trail.shift();
+
+      if (score == x) {
+
+        trail.shift();
+
+      } else {
+        console.log("hello");
+        x++;
+      }
+
+
+    }
+
+  }
+
+  function moveDown() {
+
+    if (currentDirection == "down" && paused == false) {
+      var endBoxX = trail[trail.length - 1].x;
+
+      var endBoxY = trail[trail.length - 1].y + 10;
+
+      var endBox = {
+        x: endBoxX,
+        y: endBoxY
+      };
+
+      //adds snake box to the end of the right
+
+      trail.push(endBox);
+
+      //gets rid of first snake box
+
+
+      if (score == x) {
+
+        trail.shift();
+
+      } else {
+        console.log("hello");
+        x++;
+      }
+    }
+
+  }
+
+  function moveLeft() {
+
+    if (currentDirection == "left" && paused == false) {
+
+      var endBoxX = trail[tail - 1].x - 10;
+
+      var endBoxY = trail[tail - 1].y;
+
+      var endBox = {
+        x: endBoxX,
+        y: endBoxY
+      };
+
+      //adds snake box to the end of the right
+
+      trail.push(endBox);
+
+      //gets rid of first snake box
+
+      if (score == x) {
+
+        trail.shift();
+
+      } else {
+        console.log("hello");
+        x++;
+      }
+    }
+
+  }
+
+
+  function checkBounds() {
+
+    //checks if Snake is within bounds
+
+    if (trail[tail - 1].x < 0) {
+      gameOver = true;
+    } else if (trail[0].x < 0) {
+      gameOver = true;
+    } else if (trail[tail - 1].y < 0) {
+      gameOver = true;
+    } else if (trail[tail - 1].x > canv.width) {
+      gameOver = true;
+    } else if (trail[tail - 1].y > canv.width) {
+      gameOver = true;
+    }
+  }
+
+
+  function redSquare() {
+
+    //creates red square
+
+    ctx.fillStyle = 'red';
+    ctx.fillRect(redX, redY, 10, 10);
+
+  }
+
+  function addBox() {
+
+    if (currentDirection == "right") {
+
+      var newBoxX = trail[0].x - 10;
+      var newBoxY = trail[0].y;
+
+      var newBox = {
+        x: newBoxX,
+        y: newBoxY
+      };
+
+      trail.unshift(newBox);
+
+    }
+
+  }
+
+  function crossSquare() {
+
+    //checks if the snake meets the red square
+
+    if (trail[tail - 1].x === redX && trail[tail - 1].y === redY) {
+
+      eatenSquare = true;
+
+    }
+
+  }
+
+  //function greenSnake and draw create the snake
+
+  function greenSnake() {
+
+    trail.forEach(draw);
+
+  }
+
+  function draw(trail) {
+
+    ctx.fillStyle = 'green';
+
+    ctx.fillRect(trail.x, trail.y, 10, 10);
+  }
+
+  //clears the canvas
+
+  function clear() {
+
+    ctx.fillStyle = "black";
+
+    ctx.fillRect(0, 0, canv.width, canv.height);
+
+  }
+</script>
+
+</html>
